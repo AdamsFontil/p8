@@ -128,31 +128,23 @@ const resolvers = {
     allAuthors: () => authors,
     allBooks: (root, args) => {
       console.log('args are', args);
-      if (!args.author && !args.genre) {
-        console.log('no genre or author args given, returning only books');
-        return books
-      }
-      else if (args.genre) {
-      console.log('genre given');
-        const matches = books.filter(book => {
-          console.log('book genre or genres are...', book.genres);
-          console.log('args genre', args.genre);
-          const hasGenre = book.genres.includes(args.genre);
 
-      console.log('Match found?', hasGenre);
-      return hasGenre;
-          })
-          console.log('matches', matches);
-          return matches
-          }
+      let filteredBooks = books;
 
-      else if (args.author) {
-      console.log('author given');
-      const matches = books.filter(book => book.author === args.author)
-      console.log('matches', matches);
-      return matches
+      if (args.author) {
+        console.log('filtering by author:', args.author);
+        filteredBooks = filteredBooks.filter(book => book.author === args.author);
       }
-    },
+
+      if (args.genre) {
+        console.log('filtering by genre:', args.genre);
+        filteredBooks = filteredBooks.filter(book => book.genres.includes(args.genre));
+      }
+
+      console.log('final matches:', filteredBooks);
+      return filteredBooks;
+    }
+,
   },
 
   Author: {
