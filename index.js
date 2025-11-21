@@ -116,7 +116,7 @@ type Book {
   type Query {
     bookCount: Int!
     authorCount: Int!
-    allBooks(author: String): [Book!]!
+    allBooks(author: String, genre: String): [Book!]!
     allAuthors: [Author!]!
   }
 `
@@ -128,12 +128,30 @@ const resolvers = {
     allAuthors: () => authors,
     allBooks: (root, args) => {
       console.log('args are', args);
-      if (!args.author) {
+      if (!args.author && !args.genre) {
+        console.log('no genre or author args given, returning only books');
         return books
       }
+      else if (args.genre) {
+      console.log('genre given');
+        const matches = books.filter(book => {
+          console.log('book genre or genres are...', book.genres);
+          console.log('args genre', args.genre);
+          const hasGenre = book.genres.includes(args.genre);
+
+      console.log('Match found?', hasGenre);
+      return hasGenre;
+          })
+          console.log('matches', matches);
+          return matches
+          }
+
+      else if (args.author) {
+      console.log('author given');
       const matches = books.filter(book => book.author === args.author)
       console.log('matches', matches);
       return matches
+      }
     },
   },
 
