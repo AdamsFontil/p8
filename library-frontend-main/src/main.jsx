@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 
 import { ApolloClient, HttpLink, InMemoryCache, gql } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -11,19 +12,8 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
 });
 
-const query = gql`
-  query {
-    allBooks {
-      title
-      published
-      author
-      genres
-    }
-  }
-`;
-
-client.query({ query }).then((response) => {
-  console.log("getting books", response.data);
-});
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+ReactDOM.createRoot(document.getElementById("root")).render(
+  <ApolloProvider client={client}>
+    <App />
+  </ApolloProvider>
+);
