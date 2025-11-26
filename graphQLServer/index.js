@@ -1,6 +1,7 @@
 const { ApolloServer } = require('@apollo/server')
 const { startStandaloneServer } = require('@apollo/server/standalone')
-const { v1: uuid } = require('uuid')
+const { GraphQLError } = require('graphql')
+
 
 const mongoose = require('mongoose')
 mongoose.set('strictQuery', false)
@@ -61,36 +62,6 @@ const typeDefs = `
     }
 `
 
-// const resolvers2 = {
-//   Query: {
-//     personCount: async () => Person.collection.countDocuments(),
-//     allPersons: async (root, args) => {
-//       // filters missing
-//       return Person.find({})
-//     },
-//     findPerson: async (root, args) => Person.findOne({ name: args.name }),
-//   },
-//   Person: {
-//     address: (root) => {
-//       return {
-//         street: root.street,
-//         city: root.city,
-//       }
-//     },
-//   },
-//   Mutation: {
-//     addPerson: async (root, args) => {
-//       const person = new Person({ ...args })
-//       return person.save()
-//     },
-//     editNumber: async (root, args) => {
-//       const person = await Person.findOne({ name: args.name })
-//       person.phone = args.phone
-//       return person.save()
-//     },
-//   },
-// }
-
 
 
 const resolvers = {
@@ -114,34 +85,23 @@ allBooks: async (root, args) => {
   },
     Mutation: {
       addBook: async (root, args) => {
-        const authorList = await Author.find({})
-        console.log('list of authors', authorList);
         const authorExist = await Author.findOne({ name: args.author })
-        console.log('does author exist',authorExist);
         if (authorExist === null) {
-          console.log('what are args received --- ', args);
           const newAuthor = new Author({ name: args.author, born: null })
-          console.log('new author detected adding this new author', newAuthor);
           await newAuthor.save()
           const newBook = new Book({ ...args, author: newAuthor.id })
-          console.log('what newBook created for new Author', newBook);
-        const savedBook = await newBook.save()
-        return savedBook.populate("author")
+          const savedBook = await newBook.save()
+          return savedBook.populate("author")
         }
-
-        console.log('who is author', args.author);
-        console.log('does author exist', authorExist);
         const newBook = new Book({ ...args, author: authorExist.id })
-        console.log('newBook', newBook);
         const savedBook = await newBook.save()
         return savedBook.populate("author")
       },
-      editAuthor: (root, args) => {
-        const author = authors.find(a => a.name === args.name)
-        if (!author) return null
-        const updatedAuthor = { ...author, born: args.setBornTo }
-        authors = authors.map(a => a.name === args.name ? updatedAuthor : a)
-        console.log('returned this---', updatedAuthor);
+      editAuthor: async (root, args) => {
+        const authorExist = await Author.findOne({ name: args.name })
+        if (authorExist === null) return null
+        authorExist.born = args.setBornTo
+        const updatedAuthor = await authorExist.save()
         return updatedAuthor
       }
   },
@@ -154,47 +114,6 @@ allBooks: async (root, args) => {
     }
   }
 }
-// Mutation: {
-//   addPerson: async (root, args) => {
-//       const person = new Person({ ...args })
-
-
-//       try {
-//         await person.save()
-//       } catch (error) {
-//         throw new GraphQLError('Saving person failed', {
-//           extensions: {
-//             code: 'BAD_USER_INPUT',
-//             invalidArgs: args.name,
-//             error
-//           }
-//         })
-//       }
-
-//       return person
-//   },
-//     editNumber: async (root, args) => {
-//       const person = await Person.findOne({ name: args.name })
-//       person.phone = args.phone
-
-
-//       try {
-//         await person.save()
-//       } catch (error) {
-//         throw new GraphQLError('Saving number failed', {
-//           extensions: {
-//             code: 'BAD_USER_INPUT',
-//             invalidArgs: args.name,
-//             error
-//           }
-//         })
-//       }
-
-//       return person
-//     }
-// }
-
-
 
 
 const server = new ApolloServer({
