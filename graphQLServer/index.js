@@ -107,9 +107,13 @@ allBooks: async (root, args) => {
   },
 
   Author: {
-      bookCount: (root) => {
-        const match = books.filter(book => book.author === root.name).length
-        return match
+      bookCount: async (root) => {
+      const match = await Book.find({ author: root._id})
+      console.log('what is root', root);
+      console.log('root name', root.name);
+      // const match = books.filter(book => book.author === root.name).length
+      console.log('match', match);
+      return match.length
 
     }
   }
