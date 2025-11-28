@@ -85,36 +85,54 @@ allBooks: async (root, args) => {
   },
     Mutation: {
       addBook: async (root, args) => {
+        try {
         const authorExist = await Author.findOne({ name: args.author })
+        let newBook
         if (authorExist === null) {
           const newAuthor = new Author({ name: args.author, born: null })
           await newAuthor.save()
-          const newBook = new Book({ ...args, author: newAuthor.id })
-          const savedBook = await newBook.save()
-          return savedBook.populate("author")
+          newBook = new Book({ ...args, author: newAuthor.id })
         }
-        const newBook = new Book({ ...args, author: authorExist.id })
-        const savedBook = await newBook.save()
-        return savedBook.populate("author")
+        else { newBook = new Book({ ...args, author: authorExist.id }) }
+          const savedBook = await newBook.save()
+          return await savedBook.populate("author")
+        } catch (error) {
+          throw new GraphQLError('Problem adding new book', {
+            extensions: {
+              code: 'BAD_USR_INPUT',
+              invalidArgs: args,
+              error
+            }
+          })
+        }
       },
       editAuthor: async (root, args) => {
         const authorExist = await Author.findOne({ name: args.name })
         if (authorExist === null) return null
         authorExist.born = args.setBornTo
-        const updatedAuthor = await authorExist.save()
+        try {
+          const updatedAuthor = await authorExist.save()
         return updatedAuthor
+        } catch (error) {
+          throw new GraphQLError('Problem with setting the birthyear',
+            {
+              extensions: {
+                code: 'BAD_USER_INPUT',
+                invalidArgs: args.name,
+                error
+              }
+            }
+          )
+        }
       }
   },
+
 
   Author: {
       bookCount: async (root) => {
       const match = await Book.find({ author: root._id})
-      console.log('what is root', root);
-      console.log('root name', root.name);
-      // const match = books.filter(book => book.author === root.name).length
       console.log('match', match);
       return match.length
-
     }
   }
 }
