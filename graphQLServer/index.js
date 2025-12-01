@@ -109,7 +109,18 @@ allBooks: async (root, args) => {
   }
   },
     Mutation: {
-      addBook: async (root, args) => {
+      addBook: async (root, args, context) => {
+                const currentUser = context.currentUser
+        console.log('current user is', currentUser);
+
+        if (!currentUser) {
+        console.log('user not logged in');
+        throw new GraphQLError('not authenticated', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+          }
+        })
+      }
         try {
         const authorExist = await Author.findOne({ name: args.author })
         let newBook
@@ -131,7 +142,19 @@ allBooks: async (root, args) => {
           })
         }
       },
-      editAuthor: async (root, args) => {
+      editAuthor: async (root, args, context) => {
+        const currentUser = context.currentUser
+        console.log('current user is', currentUser);
+
+        if (!currentUser) {
+        console.log('user not logged in');
+        throw new GraphQLError('not authenticated', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+          }
+        })
+      }
+
         const authorExist = await Author.findOne({ name: args.name })
         if (authorExist === null) return null
         authorExist.born = args.setBornTo
