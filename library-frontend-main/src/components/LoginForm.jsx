@@ -3,7 +3,7 @@ import { useMutation } from "@apollo/client/react";
 import { LOGIN } from "../queries";
 
 // eslint-disable-next-line react/prop-types
-const LoginForm = ({ setError, setToken, setPage }) => {
+const LoginForm = ({ show, setError, setToken, setPage }) => {
   const [username, setUsername] = useState("ahellas");
   const [password, setPassword] = useState("secret");
 
@@ -32,6 +32,10 @@ const LoginForm = ({ setError, setToken, setPage }) => {
       console.log("trouble signing in", error);
     }
   };
+
+  if (!show) {
+    return null;
+  }
 
   return (
     <div>
