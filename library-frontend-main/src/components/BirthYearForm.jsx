@@ -3,12 +3,6 @@ import { useState, useEffect } from "react";
 import { UPDATE_BIRTHYEAR } from "../queries";
 import Select from "react-select";
 
-const options = [
-  { value: "chocolate", label: "Chocolate" },
-  { value: "strawberry", label: "Strawberry" },
-  { value: "vanilla", label: "Vanilla" },
-];
-
 const BirthYearForm = ({ authors }) => {
   const [birthyear, setBirthYear] = useState("");
   const [changeBirthYear, result] = useMutation(UPDATE_BIRTHYEAR);
@@ -37,7 +31,7 @@ const BirthYearForm = ({ authors }) => {
     value: a.name,
     label: a.name,
   }));
-  console.log("names and options", newOptions, options);
+  console.log("names and options", newOptions);
   return (
     <div>
       <h2>Set Birth Year</h2>

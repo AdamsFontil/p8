@@ -103,6 +103,7 @@ allBooks: async (root, args) => {
   }
   return Book.find(filter).populate("author");
     },
+
   me: (root, args, context) => {
     return context.currentUser
   }
@@ -201,7 +202,7 @@ const server = new ApolloServer({
 
 
 startStandaloneServer(server, {
-  listen: { port: 4001 },
+  listen: { port: 4000 },
   context: async ({ req, res }) => {
     const auth = req ? req.headers.authorization : null
     if (auth && auth.startsWith('Bearer ')) {
