@@ -5,11 +5,13 @@ import NewBook from "./components/NewBook";
 import Notify from "./components/Notify";
 import LoginForm from "./components/LoginForm";
 import Recommend from "./components/Recommend";
+import { useApolloClient } from "@apollo/client/react";
 
 const App = () => {
   const [page, setPage] = useState("authors");
   const [token, setToken] = useState(null);
   const [errorMessage, setErrorMessage] = useState("testing");
+  const client = useApolloClient();
 
   const notify = (message) => {
     setErrorMessage(message);
@@ -21,7 +23,8 @@ const App = () => {
   const logout = () => {
     setToken(null);
     localStorage.clear();
-    // client.resetStore();
+    client.resetStore();
+    setPage("authors");
   };
 
   return (

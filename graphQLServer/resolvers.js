@@ -1,0 +1,147 @@
+const { GraphQLError } = require('graphql')
+const Book = require('./models/book')
+const Author = require('./models/author')
+const User = require('./models/user')
+const jwt = require('jsonwebtoken')
+const { PubSub } = require('graphql-subscriptions')
+const pubsub = new PubSub()
+
+const resolvers = {
+  Query: {
+    bookCount: async () => Book.collection.countDocuments(),
+    authorCount: async () => Author.collection.countDocuments(),
+    allAuthors: async () => { return Author.find({})},
+allBooks: async (root, args) => {
+  console.log('args given', args);
+  const filter = {};
+  if (args.author) {
+    const author = await Author.findOne({ name: args.author });
+    if (!author) return [];
+    filter.author = author._id;
+  }
+  if (args.genre) {
+    filter.genres = args.genre;
+  }
+  return Book.find(filter).populate("author");
+    },
+
+  me: (root, args, context) => {
+    return context.currentUser
+  }
+  },
+    Mutation: {
+      addBook: async (root, args, context) => {
+        const currentUser = context.currentUser
+        console.log('current user is', currentUser);
+
+        if (!currentUser) {
+        console.log('user not logged in');
+        throw new GraphQLError('not authenticated', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+          }
+        })
+      }
+        try {
+          const authorExist = await Author.findOne({ name: args.author })
+          console.log('author found', authorExist);
+        let newBook
+        if (authorExist === null) {
+          const newAuthor = new Author({ name: args.author, born: null })
+          await newAuthor.save()
+          newBook = new Book({ ...args, author: newAuthor.id })
+        }
+        else { newBook = new Book({ ...args, author: authorExist.id }) }
+          const savedBook = await (await newBook.save()).populate("author")
+          console.log('saved book is', savedBook);
+          pubsub.publish('BOOK_ADDED', { bookAdded: savedBook })
+          return await savedBook
+        } catch (error) {
+          throw new GraphQLError('Problem adding new book', {
+            extensions: {
+              code: 'BAD_USR_INPUT',
+              invalidArgs: args,
+              error
+            }
+          })
+        }
+      },
+      editAuthor: async (root, args, context) => {
+        const currentUser = context.currentUser
+        console.log('current user is', currentUser);
+
+        if (!currentUser) {
+        console.log('user not logged in');
+        throw new GraphQLError('not authenticated', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+          }
+        })
+      }
+
+        const authorExist = await Author.findOne({ name: args.name })
+        if (authorExist === null) return null
+        authorExist.born = args.setBornTo
+        try {
+          const updatedAuthor = await authorExist.save()
+        return updatedAuthor
+        } catch (error) {
+          throw new GraphQLError('Problem with setting the birthyear',
+            {
+              extensions: {
+                code: 'BAD_USER_INPUT',
+                invalidArgs: args.name,
+                error
+              }
+            }
+          )
+        }
+      },
+      createUser: async (root, args) => {
+    const user = new User({ username: args.username })
+
+    return user.save()
+      .catch(error => {
+        throw new GraphQLError('Creating the user failed', {
+          extensions: {
+            code: 'BAD_USER_INPUT',
+            invalidArgs: args.username,
+            error
+          }
+        })
+      })
+  },
+  login: async (root, args) => {
+    const user = await User.findOne({ username: args.username })
+
+    if ( !user || args.password !== 'secret' ) {
+      throw new GraphQLError('wrong credentials', {
+        extensions: {
+          code: 'BAD_USER_INPUT'
+        }
+      })
+    }
+
+    const userForToken = {
+      username: user.username,
+      id: user._id,
+    }
+
+    return { value: jwt.sign(userForToken, process.env.JWT_SECRET) }
+  },
+  },
+  Subscription: {
+    bookAdded: {
+      subscribe: () => pubsub.asyncIterableIterator('BOOK_ADDED')
+    },
+  },
+      Author: {
+      bookCount: async (root) => {
+      const match = await Book.find({ author: root._id})
+      // console.log('match', match);
+      return match.length
+    }
+  }
+}
+
+module.exports = resolvers
