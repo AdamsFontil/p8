@@ -9,7 +9,7 @@ const NewBook = (props) => {
   const [genre, setGenre] = useState("fun");
   const [genres, setGenres] = useState([]);
   const [createBook] = useMutation(NEW_BOOK, {
-    refetchQueries: [ALL_BOOKS][ALL_AUTHORS],
+    refetchQueries: [ALL_BOOKS, ALL_AUTHORS],
   });
 
   // eslint-disable-next-line react/prop-types
@@ -22,7 +22,12 @@ const NewBook = (props) => {
 
     console.log("adding these...", title, author, published, genre, genres);
     createBook({
-      variables: { title, published: Number(published), author, genres },
+      variables: {
+        title,
+        published: Number(published),
+        author,
+        genres,
+      },
     });
 
     setTitle("");

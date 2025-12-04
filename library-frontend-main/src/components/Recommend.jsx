@@ -1,6 +1,7 @@
 import { useQuery } from "@apollo/client/react";
 import { ALL_BOOKS } from "../queries";
 
+// eslint-disable-next-line react/prop-types
 const Recommend = ({ show }) => {
   console.log("what is show anyway", show);
   const favoriteGenre = "patterns";
