@@ -32,7 +32,8 @@ allBooks: async (root, args) => {
     Mutation: {
       addBook: async (root, args, context) => {
         const currentUser = context.currentUser
-        console.log('current user is', currentUser);
+        // console.log('current user is', currentUser);
+
 
         if (!currentUser) {
         console.log('user not logged in');
@@ -48,8 +49,10 @@ allBooks: async (root, args) => {
         let newBook
         if (authorExist === null) {
           const newAuthor = new Author({ name: args.author, born: null })
+          console.log('new author made', newAuthor)
           await newAuthor.save()
           newBook = new Book({ ...args, author: newAuthor.id })
+          console.log('newbook with new author', newBook);
         }
         else { newBook = new Book({ ...args, author: authorExist.id }) }
           const savedBook = await (await newBook.save()).populate("author")
